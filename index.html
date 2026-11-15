@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#090b20">
+<title>Misión Espacial — Space Mission Design Game</title>
+<style>
+  :root{
+    --bg:#080a1b; --panel:#11152f; --panel2:#171d3d; --ink:#f5f4ff;
+    --muted:#a6acce; --purple:#9b64ff; --pink:#ff4fc8; --cyan:#49e8f4;
+    --yellow:#ffe66b; --green:#85f0ae; --red:#ff6e83; --line:#484b83;
+    --shadow:#03040d;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0; min-height:100vh; color:var(--ink); background:
+    radial-gradient(circle at 15% 15%,rgba(96,69,181,.25),transparent 28%),
+    radial-gradient(circle at 86% 72%,rgba(28,117,155,.18),transparent 25%),
+    linear-gradient(180deg,#090b20 0%,#080918 100%);
+    font-family:ui-monospace,"Courier New",monospace; letter-spacing:.015em;
+  }
+  body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.42;background-image:
+    radial-gradient(2px 2px at 8% 17%,#fff 98%,transparent),
+    radial-gradient(2px 2px at 22% 71%,#b8a9ff 98%,transparent),
+    radial-gradient(1.5px 1.5px at 41% 28%,#fff 98%,transparent),
+    radial-gradient(2px 2px at 67% 13%,#9deaff 98%,transparent),
+    radial-gradient(1.5px 1.5px at 83% 43%,#fff 98%,transparent),
+    radial-gradient(2px 2px at 92% 83%,#d6b0ff 98%,transparent),
+    radial-gradient(1px 1px at 54% 88%,#fff 98%,transparent);
+    background-size:290px 250px;z-index:-1}
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  .wrap{width:min(1180px,calc(100% - 34px));margin:0 auto;padding:22px 0 48px}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:30px}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand-mark{width:48px;height:48px;display:grid;place-items:center;background:var(--purple);border:3px solid #d5baff;box-shadow:4px 4px 0 #37216b; font-size:27px;flex:none}
+  .brand-copy{line-height:1.25}
+  .brand-copy strong{display:block;color:var(--yellow);font-size:clamp(12px,2vw,17px);letter-spacing:.08em;text-shadow:2px 2px #7b3b20}
+  .brand-copy span{color:var(--muted);font-size:10px;letter-spacing:.18em}
+  .language{display:flex;border:2px solid var(--line);background:#0f1330;padding:4px;box-shadow:3px 3px 0 var(--shadow)}
+  .language button{border:0;background:transparent;color:var(--muted);padding:8px 12px;font-weight:900;font-size:12px}
+  .language button.active{background:var(--yellow);color:#1d1741;box-shadow:2px 2px 0 #8c6920}
+  .panel{background:linear-gradient(145deg,rgba(24,29,64,.97),rgba(13,17,42,.97));border:3px solid var(--line);box-shadow:7px 7px 0 var(--shadow);}
+  .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:stretch}
+  .hero-main{padding:clamp(24px,5vw,52px);position:relative;overflow:hidden;min-height:430px}
+  .hero-main:after{content:"";position:absolute;width:230px;height:230px;right:-55px;bottom:-72px;border:22px solid rgba(154,101,255,.25);border-radius:50%;box-shadow:0 0 0 17px rgba(73,232,244,.08),0 0 0 38px rgba(255,79,200,.06);pointer-events:none}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.17em;text-transform:uppercase}
+  .eyebrow:before{content:"";width:22px;height:8px;background:var(--cyan);box-shadow:4px 4px 0 #185c78}
+  h1,h2,h3,p{margin-top:0}
+  h1{font-size:clamp(30px,5.6vw,62px);line-height:1.05;color:var(--yellow);margin:22px 0 16px;text-shadow:4px 4px 0 #8b4d21,7px 7px 0 #090a18;letter-spacing:-.05em}
+  .hero-main .subtitle{font-size:clamp(13px,1.6vw,17px);line-height:1.75;color:#d9ddff;max-width:570px}
+  .pixel-ribbon{display:inline-block;margin-top:19px;padding:11px 14px;color:#130f2b;background:var(--pink);border:2px solid #ffc2ee;box-shadow:4px 4px 0 #6e2864;font-size:11px;font-weight:900;letter-spacing:.07em}
+  .hero-side{padding:26px;display:flex;flex-direction:column;justify-content:space-between;gap:25px}
+  .mission-mini{display:flex;gap:12px;align-items:center;padding:13px 0;border-bottom:1px dashed #555b91}
+  .mission-mini:last-child{border:0}
+  .planet{width:45px;height:45px;display:grid;place-items:center;background:#262451;border:2px solid var(--purple);box-shadow:3px 3px 0 #060713;font-size:24px;flex:none}
+  .mission-mini strong{display:block;color:var(--yellow);font-size:12px;margin-bottom:5px}
+  .mission-mini span{display:block;color:var(--muted);font-size:10px;line-height:1.5}
+  .rules{margin-top:25px;padding:22px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .rule{display:flex;gap:12px;align-items:flex-start}
+  .rule-number{color:var(--cyan);font-size:22px;font-weight:900;text-shadow:2px 2px #174959}
+  .rule p{margin:0;color:#d6dcff;font-size:11px;line-height:1.65}
+  .rule b{color:var(--yellow)}
+  .setup{margin-top:25px;padding:25px;display:grid;grid-template-columns:.78fr 1.22fr;gap:25px}
+  .setup h2{font-size:17px;color:var(--yellow);margin-bottom:9px}
+  .setup p{font-size:11px;color:var(--muted);line-height:1.6}
+  .field-label{display:block;color:var(--cyan);font-size:10px;font-weight:900;letter-spacing:.12em;margin:16px 0 8px}
+  input,select{width:100%;background:#080c24;color:white;border:2px solid #555a95;padding:12px 13px;outline:none;border-radius:0}
+  input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(73,232,244,.13)}
+  .team-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .team-fields input{font-size:12px}
+  .primary,.secondary,.danger{border:0;padding:14px 18px;font-weight:1000;letter-spacing:.07em;text-transform:uppercase;box-shadow:4px 4px 0 var(--shadow);transition:transform .12s,filter .12s}
+  .primary{background:var(--yellow);color:#21183f;border:2px solid #fff2a8}
+  .secondary{background:var(--cyan);color:#082c3b;border:2px solid #b3faff}
+  .danger{background:#ff718e;color:#350d24;border:2px solid #ffc5d1}
+  .primary:hover,.secondary:hover,.danger:hover{transform:translate(-2px,-2px);filter:brightness(1.08);box-shadow:6px 6px 0 var(--shadow)}
+  .primary:disabled,.secondary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  .start-action{width:100%;margin-top:18px;font-size:13px}
+  .hidden{display:none!important}
+  .game-top{display:grid;grid-template-columns:1fr auto;gap:15px;align-items:center;margin-bottom:18px}
+  .game-top h2{color:var(--yellow);font-size:clamp(17px,3vw,25px);margin:0 0 6px}
+  .game-top p{margin:0;color:var(--muted);font-size:11px}
+  .progress-box{min-width:180px;text-align:right}
+  .progress-label{font-size:10px;color:var(--cyan);margin-bottom:7px}
+  .progress-track,.budget-track{height:12px;background:#070a1c;border:2px solid #4d538e;padding:1px}
+  .progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--purple),var(--cyan));transition:width .2s}
+  .game-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:18px;align-items:start}
+  .play-panel{padding:clamp(18px,3vw,30px)}
+  .mission-heading{display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px dashed #545a90;margin-bottom:18px}
+  .mission-emblem{width:56px;height:56px;display:grid;place-items:center;font-size:29px;background:#28244e;border:2px solid var(--purple);box-shadow:4px 4px 0 #050611;flex:none}
+  .mission-heading .overline{color:var(--cyan);font-size:9px;letter-spacing:.16em;font-weight:900}
+  .mission-heading h3{margin:5px 0;color:var(--yellow);font-size:clamp(13px,2vw,18px)}
+  .mission-heading p{margin:0;color:var(--muted);font-size:10px;line-height:1.55}
+  .active-player{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:18px 0 20px;padding:12px 14px;background:#0b1029;border:2px solid #424a83}
+  .active-player small{display:block;color:var(--muted);font-size:9px;margin-bottom:5px}
+  .active-player strong{color:var(--green);font-size:13px}
+  .player-tag{color:#14132b;background:var(--green);padding:7px 9px;font-size:10px;font-weight:1000}
+  .challenge-number{color:var(--pink);font-size:10px;font-weight:1000;letter-spacing:.13em}
+  .question{font-size:clamp(16px,2.5vw,23px);line-height:1.45;margin:9px 0 7px;color:#fff}
+  .instruction{font-size:10px;color:var(--muted);line-height:1.55;margin-bottom:17px}
+  .options-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .option-card{min-height:190px;text-align:left;background:#101633;border:2px solid #59609a;color:var(--ink);padding:15px 13px;display:flex;flex-direction:column;gap:12px;box-shadow:4px 4px 0 #03040d;transition:transform .12s,border-color .12s,background .12s}
+  .option-card:hover:not(:disabled){transform:translateY(-4px);border-color:var(--cyan);background:#17234a}
+  .option-card:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.25)}
+  .option-card.selected{border-color:var(--yellow);background:#282345}
+  .option-top{display:flex;justify-content:space-between;align-items:center;gap:7px}
+  .option-letter{display:grid;place-items:center;width:31px;height:31px;background:var(--purple);color:white;font-size:14px;font-weight:1000;box-shadow:3px 3px 0 #070715}
+  .option-tag{font-size:8px;color:var(--cyan);letter-spacing:.1em;font-weight:900}
+  .option-label{font-size:11px;line-height:1.55;flex:1}
+  .option-meta{display:grid;grid-template-columns:1fr;gap:7px;padding-top:9px;border-top:1px dashed #505683}
+  .meta-line{display:flex;justify-content:space-between;align-items:center;gap:5px;font-size:9px}
+  .meta-line span:first-child{color:var(--muted)}
+  .cost{color:var(--pink);font-weight:1000;text-align:right}
+  .points{color:var(--green);font-weight:1000;text-align:right}
+  .missing-note{color:var(--yellow);font-size:8px;line-height:1.5}
+  .side-column{display:flex;flex-direction:column;gap:15px}
+  .stats-card,.score-card{padding:18px}
+  .stats-card h3,.score-card h3{font-size:11px;color:var(--cyan);letter-spacing:.14em;margin-bottom:14px}
+  .stat{display:flex;justify-content:space-between;gap:10px;margin:10px 0;font-size:10px}
+  .stat span{color:var(--muted)}
+  .stat strong{color:var(--yellow);text-align:right}
+  .budget-big{font-size:22px;color:var(--green);font-weight:1000;margin:5px 0 11px;letter-spacing:-.06em}
+  .budget-caption{color:var(--muted);font-size:9px;margin-bottom:8px}
+  .budget-fill{height:100%;background:linear-gradient(90deg,#55dfa3,#d5f66c);transition:width .25s}
+  .team-score-list{display:flex;flex-direction:column;gap:8px}
+  .team-score-row{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#0b1028;padding:9px;border-left:3px solid var(--purple);font-size:9px}
+  .team-score-row.active{border-left-color:var(--yellow);background:#252344}
+  .team-score-row strong{color:var(--green);white-space:nowrap}
+  .result-card{padding:25px;text-align:center;border-color:var(--green)}
+  .result-card .result-icon{font-size:42px;margin-bottom:9px}
+  .result-card h3{font-size:20px;color:var(--green);margin-bottom:7px}
+  .result-card p{font-size:11px;color:#d6ddff;line-height:1.7}
+  .result-deltas{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:18px 0}
+  .delta{background:#0a1027;border:2px solid #414b7e;padding:11px 14px;min-width:125px}
+  .delta span{display:block;color:var(--muted);font-size:9px;margin-bottom:5px}
+  .delta strong{font-size:14px;color:var(--green)}
+  .turn-note{color:var(--yellow)!important;font-size:10px!important}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(3,4,15,.82);z-index:20;display:grid;place-items:center;padding:18px}
+  .modal{width:min(490px,100%);padding:25px;background:#131938;border:3px solid var(--yellow);box-shadow:8px 8px 0 #02030a}
+  .modal h3{font-size:17px;color:var(--yellow);margin-bottom:10px}
+  .modal p{font-size:11px;line-height:1.65;color:#e0e4ff}
+  .modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+  .modal-actions button{flex:1;min-width:130px}
+  .summary-head{text-align:center;padding:34px 20px;margin-bottom:20px}
+  .summary-head .cup{font-size:48px}
+  .summary-head h2{font-size:clamp(22px,4vw,34px);color:var(--yellow);margin:12px 0}
+  .summary-head p{color:var(--muted);font-size:11px;line-height:1.7;margin:0}
+  .winner-banner{display:inline-block;margin-top:16px;background:var(--green);color:#0b1c25;padding:10px 16px;border:2px solid #e1ffed;box-shadow:4px 4px 0 #050713;font-size:12px;font-weight:1000}
+  .rankings{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .rank-card{padding:20px;position:relative}
+  .rank-card.winner{border-color:var(--yellow)}
+  .rank-num{font-size:10px;color:var(--pink);letter-spacing:.1em}
+  .rank-card h3{font-size:15px;color:var(--yellow);margin:8px 0 15px;overflow-wrap:anywhere}
+  .rank-points{font-size:28px;color:var(--green);font-weight:1000}
+  .rank-card .stat{padding-top:9px;border-top:1px dashed #535888}
+  .mission-breakdown{margin-top:18px}
+  .history{margin-top:20px;padding:20px}
+  .history h3{color:var(--cyan);font-size:12px;margin-bottom:12px}
+  .history-row{display:grid;grid-template-columns:1.2fr 1fr auto auto;gap:10px;padding:9px 0;border-bottom:1px dashed #343c6e;font-size:9px;align-items:center}
+  .history-row span:nth-child(2){color:var(--muted)}
+  .history-row .history-cost{color:var(--pink);text-align:right}
+  .history-row .history-points{color:var(--green);text-align:right}
+  .summary-actions{display:flex;gap:12px;justify-content:center;margin-top:22px;flex-wrap:wrap}
+  .footnote{margin:20px 2px 0;color:#858cac;font-size:9px;line-height:1.65}
+  .source-note{margin-top:14px;padding:12px 14px;border-left:3px solid var(--yellow);background:#15152f;color:#c8cbea;font-size:9px;line-height:1.6}
+  @media(max-width:900px){.hero{grid-template-columns:1fr}.hero-main{min-height:360px}.game-grid{grid-template-columns:1fr}.side-column{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.options-grid{grid-template-columns:1fr}}
+  @media(max-width:620px){.wrap{width:min(100% - 20px,1180px);padding-top:12px}.topbar{margin-bottom:18px}.rules{grid-template-columns:1fr;padding:19px}.setup{grid-template-columns:1fr;padding:20px}.team-fields{grid-template-columns:1fr}.game-top{grid-template-columns:1fr}.progress-box{text-align:left}.side-column{grid-template-columns:1fr}.active-player{align-items:flex-start;flex-direction:column}.history-row{grid-template-columns:1fr auto;gap:4px}.history-row span:nth-child(2){grid-column:1}.history-row .history-cost,.history-row .history-points{grid-row:1;text-align:right}.history-row .history-points{grid-column:2}.hero-main{min-height:0}.brand-copy span{font-size:8px}}
+  @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">🚀</div>
+      <div class="brand-copy"><strong>MISIÓN ESPACIAL</strong><span>SPACE MISSION DESIGN GAME</span></div>
+    </div>
+    <div class="language" role="group" aria-label="Language selector">
+      <button id="lang-es" class="active" type="button">ES</button>
+      <button id="lang-en" type="button">EN</button>
+    </div>
+  </header>
+
+  <section id="screen-start">
+    <div class="hero">
+      <div class="hero-main panel">
+        <div class="eyebrow" data-i18n="heroEyebrow">SIMULADOR DE DECISIONES NASA</div>
+        <h1 data-i18n="heroTitle">MISIÓN<br>ESPACIAL</h1>
+        <p class="subtitle" data-i18n="heroSubtitle">Tu equipo está al mando. Planificá misiones reales, resolvé problemas críticos y administrá cada dólar. No gana quien más gasta: gana quien toma las mejores decisiones.</p>
+        <div class="pixel-ribbon" data-i18n="heroRibbon">PRESUPUESTO INICIAL · USD 300.000.000</div>
+      </div>
+      <aside class="hero-side panel">
+        <div>
+          <div class="eyebrow" data-i18n="missionsIncluded">MISIONES INCLUIDAS</div>
+          <div class="mission-mini"><div class="planet">🌕</div><div><strong>APOLLO 11</strong><span data-i18n="apolloShort">Descenso lunar y recolección de muestras</span></div></div>
+          <div class="mission-mini"><div class="planet">🪐</div><div><strong>EUROPA CLIPPER</strong><span data-i18n="europaShort">Exploración de la luna Europa</span></div></div>
+          <div class="mission-mini"><div class="planet">🛰️</div><div><strong>CASSINI–HUYGENS</strong><span data-i18n="cassiniShort">Saturno, sus anillos y Titán</span></div></div>
+        </div>
+        <div class="source-note" data-i18n="introNote">Basado en las cartas y la guía de puntuación de la presentación del proyecto.</div>
+      </aside>
+    </div>
+
+    <div class="rules panel">
+      <div class="rule"><div class="rule-number">01</div><p data-i18n="rule1"><b>Elegí con estrategia.</b><br>Cada opción cuesta dinero y otorga puntos.</p></div>
+      <div class="rule"><div class="rule-number">02</div><p data-i18n="rule2"><b>Cuidá el presupuesto.</b><br>Cada equipo comienza con USD 300 millones.</p></div>
+      <div class="rule"><div class="rule-number">03</div><p data-i18n="rule3"><b>Sumá el máximo puntaje.</b><br>Al final gana el equipo con más puntos; el presupuesto desempata.</p></div>
+    </div>
+
+    <div class="setup panel">
+      <div>
+        <div class="eyebrow" data-i18n="setupEyebrow">CONFIGURACIÓN</div>
+        <h2 data-i18n="setupTitle">Prepará tu equipo</h2>
+        <p data-i18n="setupDescription">Jugá en solitario o agregá hasta cuatro equipos. Cada uno tendrá su propio presupuesto y puntuación.</p>
+        <label class="field-label" for="team-count" data-i18n="teamCountLabel">CANTIDAD DE EQUIPOS</label>
+        <select id="team-count">
+          <option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label" data-i18n="namesLabel">NOMBRES DE LOS EQUIPOS</label>
+        <div id="team-names" class="team-fields">
+          <input maxlength="24" value="Equipo 1" aria-label="Team 1 name">
+          <input maxlength="24" value="Equipo 2" aria-label="Team 2 name">
+        </div>
+        <button id="start-button" class="primary start-action" type="button" data-i18n="launchButton">▶ INICIAR MISIÓN</button>
+      </div>
+    </div>
+    <p class="footnote" data-i18n="startFootnote">Modo de juego: los equipos responden por turnos a la misma situación. Cada decisión queda registrada automáticamente.</p>
+  </section>
+
+  <section id="screen-game" class="hidden">
+    <div class="game-top">
+      <div><h2 data-i18n="commandCenter">CENTRO DE COMANDO</h2><p id="turn-subtitle"></p></div>
+      <div class="progress-box"><div id="progress-label" class="progress-label"></div><div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div></div>
+    </div>
+    <div class="game-grid">
+      <main id="play-panel" class="play-panel panel"></main>
+      <aside class="side-column">
+        <div id="stats-card" class="stats-card panel"></div>
+        <div id="score-card" class="score-card panel"></div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="screen-summary" class="hidden">
+    <div id="summary-content"></div>
+  </section>
+</div>
+
+<div id="choice-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal">
+    <h3 id="modal-title"></h3>
+    <p id="modal-copy"></p>
+    <div class="modal-actions"><button id="cancel-choice" class="secondary" type="button" data-i18n="cancel">VOLVER</button><button id="confirm-choice" class="primary" type="button" data-i18n="confirm">CONFIRMAR</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const INITIAL_BUDGET = 300_000_000;
+  let lang = 'es';
+  let teams = [];
+  let challengeIndex = 0;
+  let teamIndex = 0;
+  let selectedOptionIndex = null;
+  let lastOutcome = null;
+  let currentScreen = 'start';
+
+  const i18n = {
+    es: {
+      heroEyebrow:'SIMULADOR DE DECISIONES NASA', heroTitle:'MISIÓN<br>ESPACIAL',
+      heroSubtitle:'Tu equipo está al mando. Planificá misiones reales, resolvé problemas críticos y administrá cada dólar. No gana quien más gasta: gana quien toma las mejores decisiones.',
+      heroRibbon:'PRESUPUESTO INICIAL · USD 300.000.000', missionsIncluded:'MISIONES INCLUIDAS',
+      apolloShort:'Descenso lunar y recolección de muestras', europaShort:'Exploración de la luna Europa', cassiniShort:'Saturno, sus anillos y Titán',
+      introNote:'Basado en las cartas y la guía de puntuación de la presentación del proyecto.',
+      rule1:'<b>Elegí con estrategia.</b><br>Cada opción cuesta dinero y otorga puntos.',
+      rule2:'<b>Cuidá el presupuesto.</b><br>Cada equipo comienza con USD 300 millones.',
+      rule3:'<b>Sumá el máximo puntaje.</b><br>Al final gana el equipo con más puntos; el presupuesto desempata.',
+      setupEyebrow:'CONFIGURACIÓN', setupTitle:'Prepará tu equipo',
+      setupDescription:'Jugá en solitario o agregá hasta cuatro equipos. Cada uno tendrá su propio presupuesto y puntuación.',
+      teamCountLabel:'CANTIDAD DE EQUIPOS', namesLabel:'NOMBRES DE LOS EQUIPOS',launchButton:'▶ INICIAR MISIÓN',
+      startFootnote:'Modo de juego: los equipos responden por turnos a la misma situación. Cada decisión queda registrada automáticamente.',
+      commandCenter:'CENTRO DE COMANDO', round:'RONDA', of:'DE', activeTeam:'EQUIPO EN TURNO',remaining:'PRESUPUESTO DISPONIBLE',
+      spent:'GASTADO',totalPoints:'PUNTAJE',mission:'MISIÓN',objective:'OBJETIVO',challenge:'PROBLEMA',
+      choose:'Elegí una resolución. El costo se descontará del presupuesto al confirmar.',
+      cost:'COSTO',points:'PUNTOS',option:'OPCIÓN',notListed:'COSTO NO INDICADO',
+      noCost:'La presentación no especifica el costo de esta opción. No se puede seleccionar hasta completar ese dato.',
+      tooExpensive:'Presupuesto insuficiente',tooExpensiveBody:'Esta opción supera el presupuesto disponible de este equipo.',
+      team:'Equipo',spentLabel:'Presupuesto utilizado',remainingLabel:'Presupuesto restante',
+      resultTitle:'DECISIÓN REGISTRADA',resultSpent:'Presupuesto descontado',resultPoints:'Puntos obtenidos',
+      continue:'CONTINUAR ▶',nextTeam:'SIGUIENTE EQUIPO ▶',nextChallenge:'SIGUIENTE DESAFÍO ▶',
+      missionComplete:'MISIÓN COMPLETADA',allComplete:'¡TODAS LAS MISIONES COMPLETADAS!',
+      summarySubtitle:'El centro de comando cerró el registro. Revisá los resultados de cada equipo.',
+      winner:'GANADOR/A',winnerText:'La estrategia con más puntos se queda con la victoria.',
+      finalRanking:'CLASIFICACIÓN FINAL',spentTotal:'TOTAL INVERTIDO',budgetLeft:'SALDO FINAL',
+      missionResults:'PUNTAJE POR MISIÓN',decisionLog:'REGISTRO DE DECISIONES',
+      restart:'↻ NUEVA PARTIDA',playAgain:'VOLVER A JUGAR',
+      cancel:'VOLVER',confirm:'CONFIRMAR', tie:'EMPATE',
+      tieBreak:'En caso de empate en puntos, gana quien conserve más presupuesto.',
+      sourceCaveat:'Nota de la presentación: el costo de la opción A del problema de radiación de Europa Clipper no aparece indicado. Por eso queda deshabilitada, aunque su puntaje (+250) sí figura en la guía. El juego no inventa ese importe.',
+      noHistory:'Sin decisiones registradas.',spentPoints:'PUNTOS',
+      missionLabels:['APOLLO 11','EUROPA CLIPPER','CASSINI–HUYGENS'],
+      teamDefault:'Equipo'
+    },
+    en: {
+      heroEyebrow:'NASA DECISION SIMULATOR', heroTitle:'SPACE<br>MISSION',
+      heroSubtitle:'Your team is in command. Plan real missions, solve critical problems, and manage every dollar. The winner is not the team that spends the most—it is the team that makes the smartest decisions.',
+      heroRibbon:'STARTING BUDGET · USD 300,000,000', missionsIncluded:'MISSIONS INCLUDED',
+      apolloShort:'Lunar landing and sample collection', europaShort:'Exploring Jupiter’s moon Europa', cassiniShort:'Saturn, its rings, and Titan',
+      introNote:'Based on the cards and scoring guide in the project presentation.',
+      rule1:'<b>Choose strategically.</b><br>Every option costs money and awards points.',
+      rule2:'<b>Protect your budget.</b><br>Each team starts with USD 300 million.',
+      rule3:'<b>Earn the highest score.</b><br>The highest score wins; remaining budget breaks a tie.',
+      setupEyebrow:'SETUP', setupTitle:'Set up your team',
+      setupDescription:'Play solo or add up to four teams. Each team gets its own budget and score.',
+      teamCountLabel:'NUMBER OF TEAMS', namesLabel:'TEAM NAMES',launchButton:'▶ START MISSION',
+      startFootnote:'How to play: teams take turns answering the same situation. Every decision is recorded automatically.',
+      commandCenter:'COMMAND CENTER', round:'ROUND', of:'OF', activeTeam:'TEAM UP NOW',remaining:'AVAILABLE BUDGET',
+      spent:'SPENT',totalPoints:'SCORE',mission:'MISSION',objective:'OBJECTIVE',challenge:'CHALLENGE',
+      choose:'Choose a solution. The cost will be deducted from your budget when you confirm.',
+      cost:'COST',points:'POINTS',option:'OPTION',notListed:'COST NOT LISTED',
+      noCost:'The presentation does not specify the cost of this option. It cannot be selected until that value is added.',
+      tooExpensive:'Insufficient budget',tooExpensiveBody:'This option exceeds the team’s available budget.',
+      team:'Team',spentLabel:'Budget spent',remainingLabel:'Budget remaining',
+      resultTitle:'DECISION RECORDED',resultSpent:'Budget deducted',resultPoints:'Points earned',
+      continue:'CONTINUE ▶',nextTeam:'NEXT TEAM ▶',nextChallenge:'NEXT CHALLENGE ▶',
+      missionComplete:'MISSION COMPLETE',allComplete:'ALL MISSIONS COMPLETE!',
+      summarySubtitle:'The command center has closed the record. Review each team’s results.',
+      winner:'WINNER',winnerText:'The highest-scoring strategy takes the victory.',
+      finalRanking:'FINAL RANKING',spentTotal:'TOTAL SPENT',budgetLeft:'FINAL BALANCE',
+      missionResults:'SCORE BY MISSION',decisionLog:'DECISION LOG',
+      restart:'↻ NEW GAME',playAgain:'PLAY AGAIN',
+      cancel:'BACK',confirm:'CONFIRM', tie:'TIE',
+      tieBreak:'If teams are tied on points, the team with the larger remaining budget wins.',
+      sourceCaveat:'Presentation note: the cost for option A in the Europa Clipper radiation challenge is not shown. It is disabled even though its score (+250) appears in the guide. The game does not invent that amount.',
+      noHistory:'No decisions recorded.',spentPoints:'POINTS',
+      missionLabels:['APOLLO 11','EUROPA CLIPPER','CASSINI–HUYGENS'],
+      teamDefault:'Team'
+    }
+  };
+  const t = key => i18n[lang][key] ?? key;
+
+  // Costs and scores below are transcribed from the uploaded presentation's cards and scoring guides.
+  // Europa Clipper / radiation / option A has no cost printed in the source, so cost:null disables it.
+  const missions = [
+    {
+      id:'apollo', title:'APOLLO 11', icon:'🌕',
+      objective:{es:'Planificar el descenso lunar, la exploración de la superficie y el regreso con muestras.',en:'Plan the lunar landing, surface exploration, and return with collected samples.'},
+      challenges:[
+        {prompt:{es:'Los científicos quieren añadir nuevos instrumentos de observación.',en:'Scientists want to add new observation instruments.'},options:[
+          {letter:'A',label:{es:'Instalar únicamente los instrumentos prioritarios.',en:'Install only the priority instruments.'},cost:25_000_000,points:250},
+          {letter:'B',label:{es:'Instalar todos los instrumentos posibles.',en:'Install every instrument possible.'},cost:50_000_000,points:400},
+          {letter:'C',label:{es:'Ignorar la petición y no instalar nuevos instrumentos.',en:'Ignore the request and install no new instruments.'},cost:0,points:100}
+        ]},
+        {prompt:{es:'La nave llegó a la órbita lunar. Ahora debes elegir cómo realizar el descenso.',en:'The spacecraft has reached lunar orbit. Now choose how to make the descent.'},options:[
+          {letter:'A',label:{es:'Sistema de descenso básico.',en:'Basic descent system.'},cost:35_000_000,points:250},
+          {letter:'B',label:{es:'Sistema de navegación y descenso avanzado.',en:'Advanced navigation and descent system.'},cost:50_000_000,points:400},
+          {letter:'C',label:{es:'Sistema experimental automatizado.',en:'Automated experimental system.'},cost:75_000_000,points:600}
+        ]},
+        {prompt:{es:'Los astronautas llegaron a la superficie lunar. Ahora debes decidir cómo administrar los recursos para recolectar muestras y volver.',en:'The astronauts have reached the lunar surface. Decide how to manage resources to collect samples and return.'},options:[
+          {letter:'A',label:{es:'Exploración corta y regreso inmediato.',en:'Short exploration and immediate return.'},cost:30_000_000,points:250},
+          {letter:'B',label:{es:'Exploración completa y recolección de muestras.',en:'Full exploration and sample collection.'},cost:40_000_000,points:350},
+          {letter:'C',label:{es:'Exploración extendida con equipamiento adicional.',en:'Extended exploration with additional equipment.'},cost:60_000_000,points:500}
+        ]}
+      ]
+    },
+    {
+      id:'europa', title:'EUROPA CLIPPER', icon:'🪐',
+      objective:{es:'Investigar la luna Europa para determinar si posee condiciones adecuadas para albergar vida.',en:'Investigate Europa to determine whether it has conditions suitable for hosting life.'},
+      challenges:[
+        {prompt:{es:'Se propone añadir un radar avanzado para estudiar el océano bajo el hielo.',en:'An advanced radar is proposed to study the ocean beneath the ice.'},options:[
+          {letter:'A',label:{es:'Incorporar el radar y ajustar otros gastos de la misión.',en:'Add the radar and adjust other mission expenses.'},cost:45_000_000,points:250},
+          {letter:'B',label:{es:'Diseñar un radar completamente nuevo desde cero.',en:'Design a completely new radar from scratch.'},cost:100_000_000,points:500},
+          {letter:'C',label:{es:'Eliminar cualquier estudio subterráneo.',en:'Remove all subsurface study.'},cost:0,points:100}
+        ]},
+        {prompt:{es:'Europa está expuesta a intensa radiación procedente de Júpiter.',en:'Europa is exposed to intense radiation from Jupiter.'},options:[
+          {letter:'A',label:{es:'Reforzar los sistemas electrónicos críticos.',en:'Reinforce critical electronic systems.'},cost:null,points:250},
+          {letter:'B',label:{es:'Blindar toda la nave al máximo nivel posible.',en:'Shield the entire spacecraft to the highest possible level.'},cost:50_000_000,points:400},
+          {letter:'C',label:{es:'Mantener el diseño original sin protección adicional.',en:'Keep the original design without additional protection.'},cost:0,points:100}
+        ]},
+        {prompt:{es:'Los científicos solicitan más sobrevuelos de Europa para recoger datos adicionales.',en:'Scientists request more flybys of Europa to collect additional data.'},options:[
+          {letter:'A',label:{es:'Planificar sobrevuelos estratégicos en zonas prioritarias.',en:'Plan strategic flybys over priority areas.'},cost:80_000_000,points:250},
+          {letter:'B',label:{es:'Duplicar el número de sobrevuelos sin restricciones presupuestarias.',en:'Double the number of flybys without budget restrictions.'},cost:80_000_000,points:400},
+          {letter:'C',label:{es:'Reducir los sobrevuelos para ahorrar costos.',en:'Reduce flybys to save costs.'},cost:0,points:100}
+        ]}
+      ]
+    },
+    {
+      id:'cassini', title:'CASSINI–HUYGENS', icon:'🛰️',
+      objective:{es:'Estudiar Saturno, sus anillos y sus lunas, especialmente Titán.',en:'Study Saturn, its rings, and its moons, especially Titan.'},
+      challenges:[
+        {prompt:{es:'Los científicos quieren añadir nuevos instrumentos de observación.',en:'Scientists want to add new observation instruments.'},options:[
+          {letter:'A',label:{es:'Instalar únicamente los instrumentos prioritarios.',en:'Install only the priority instruments.'},cost:25_000_000,points:300},
+          {letter:'B',label:{es:'Instalar todos los instrumentos posibles.',en:'Install every instrument possible.'},cost:50_000_000,points:450},
+          {letter:'C',label:{es:'Ignorar la petición y no instalar nuevos instrumentos.',en:'Ignore the request and install no new instruments.'},cost:0,points:-100}
+        ]},
+        {prompt:{es:'La trayectoria hacia Saturno requiere asistencia gravitatoria.',en:'The trajectory to Saturn requires gravitational assistance.'},options:[
+          {letter:'A',label:{es:'Aprovechar los sobrevuelos planetarios para ahorrar combustible.',en:'Use planetary flybys to save fuel.'},cost:20_000_000,points:200},
+          {letter:'B',label:{es:'Llevar combustible extra para una ruta directa.',en:'Carry extra fuel for a direct route.'},cost:30_000_000,points:300},
+          {letter:'C',label:{es:'Mantener el diseño original sin protección adicional.',en:'Keep the original design without additional protection.'},cost:0,points:-100}
+        ]},
+        {prompt:{es:'Antes de liberar la sonda Huygens sobre Titán, se detecta una incertidumbre en las comunicaciones.',en:'Before releasing the Huygens probe over Titan, a communications uncertainty is detected.'},options:[
+          {letter:'A',label:{es:'Realizar verificaciones adicionales de comunicación.',en:'Carry out additional communication checks.'},cost:20_000_000,points:250},
+          {letter:'B',label:{es:'Rediseñar completamente el sistema de comunicaciones.',en:'Completely redesign the communications system.'},cost:80_000_000,points:400},
+          {letter:'C',label:{es:'Continuar sin pruebas adicionales.',en:'Continue without additional tests.'},cost:0,points:100}
+        ]}
+      ]
+    }
+  ];
+  const allChallenges = missions.flatMap((mission, mi) => mission.challenges.map((challenge, ci) => ({...challenge, mission, missionIndex:mi, challengeIndex:ci})));
+  const $ = id => document.getElementById(id);
+  const escapeHTML = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const money = value => value === null ? t('notListed') : `USD ${new Intl.NumberFormat(lang === 'es' ? 'es-AR' : 'en-US',{maximumFractionDigits:0}).format(value)}`;
+  const signed = value => `${value > 0 ? '+' : ''}${new Intl.NumberFormat(lang === 'es' ? 'es-AR' : 'en-US').format(value)}`;
+  const showScreen = name => {
+    currentScreen = name;
+    $('screen-start').classList.toggle('hidden',name !== 'start');
+    $('screen-game').classList.toggle('hidden',name !== 'game');
+    $('screen-summary').classList.toggle('hidden',name !== 'summary');
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+  function applyTranslations(){
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.dataset.i18n; if(i18n[lang][key] !== undefined) el.innerHTML = t(key); });
+    $('lang-es').classList.toggle('active',lang==='es');
+    $('lang-en').classList.toggle('active',lang==='en');
+    $('lang-es').setAttribute('aria-pressed',String(lang==='es'));
+    $('lang-en').setAttribute('aria-pressed',String(lang==='en'));
+    if(currentScreen==='game') renderGame();
+    if(currentScreen==='summary') renderSummary();
+    if(currentScreen==='start') renderTeamInputs(true);
+  }
+  function renderTeamInputs(preserve=true){
+    const count = Number($('team-count').value);
+    const old = preserve ? [...$('team-names').querySelectorAll('input')].map(input=>input.value) : [];
+    $('team-names').innerHTML = '';
+    for(let i=0;i<count;i++){
+      const input = document.createElement('input');
+      input.maxLength = 24;
+      input.value = old[i] || `${t('teamDefault')} ${i+1}`;
+      input.setAttribute('aria-label',`${t('teamDefault')} ${i+1}`);
+      input.placeholder = `${t('teamDefault')} ${i+1}`;
+      $('team-names').appendChild(input);
+    }
+  }
+  function beginGame(){
+    const names = [...$('team-names').querySelectorAll('input')].map((input,i)=>input.value.trim() || `${t('teamDefault')} ${i+1}`);
+    teams = names.map(name=>({name,budget:INITIAL_BUDGET,spent:0,points:0,missionPoints:{apollo:0,europa:0,cassini:0},records:[]}));
+    challengeIndex=0;teamIndex=0;selectedOptionIndex=null;lastOutcome=null;
+    showScreen('game');renderGame();
+  }
+  function renderGame(){
+    if(!teams.length) return;
+    const item = allChallenges[challengeIndex];
+    const team = teams[teamIndex];
+    const missionRound = item.challengeIndex+1;
+    const percent = ((challengeIndex*teams.length + teamIndex + 1)/(allChallenges.length*teams.length))*100;
+    $('turn-subtitle').textContent = `${t('round')} ${challengeIndex+1} ${t('of')} ${allChallenges.length} · ${team.name}`;
+    $('progress-label').textContent = `${t('round')} ${challengeIndex+1}/${allChallenges.length} · ${Math.round(percent)}%`;
+    $('progress-fill').style.width = `${percent}%`;
+
+    $('stats-card').innerHTML = `
+      <h3>${t('activeTeam')}</h3>
+      <div class="budget-caption">${escapeHTML(team.name)}</div>
+      <div class="budget-big">${money(team.budget)}</div>
+      <div class="budget-caption">${t('remaining')}</div>
+      <div class="budget-track"><div class="budget-fill" style="width:${Math.max(0,team.budget/INITIAL_BUDGET*100)}%"></div></div>
+      <div class="stat"><span>${t('spent')}</span><strong>${money(team.spent)}</strong></div>
+      <div class="stat"><span>${t('totalPoints')}</span><strong>${signed(team.points)}</strong></div>
+      <div class="stat"><span>${t('mission')}</span><strong>${item.mission.title}</strong></div>`;
+    $('score-card').innerHTML = `<h3>${lang==='es'?'MARCADOR DE EQUIPOS':'TEAM SCOREBOARD'}</h3><div class="team-score-list">${teams.map((entry,i)=>`<div class="team-score-row ${i===teamIndex?'active':''}"><span>${escapeHTML(entry.name)}</span><strong>${signed(entry.points)} pts</strong></div>`).join('')}</div><p class="footnote">${t('tieBreak')}</p>`;
+
+    const missionTitle = item.mission.title;
+    const objective = item.mission.objective[lang];
+    if(lastOutcome){
+      const outcome = lastOutcome;
+      const nextTeam = teamIndex+1 < teams.length;
+      const nextLabel = nextTeam ? t('nextTeam') : (challengeIndex===allChallenges.length-1 ? t('allComplete') : t('nextChallenge'));
+      const subline = nextTeam ? `${t('team')} ${escapeHTML(teams[teamIndex+1].name)} ${lang==='es'?'responde ahora a la misma situación.':'answers the same situation next.'}` : (challengeIndex===allChallenges.length-1 ? t('allComplete') : (missionRound===3 ? t('missionComplete') : ''));
+      $('play-panel').innerHTML = `
+        <div class="mission-heading"><div class="mission-emblem">${item.mission.icon}</div><div><div class="overline">${t('mission')} ${item.missionIndex+1} / 3</div><h3>${missionTitle}</h3><p><b>${t('objective')}:</b> ${objective}</p></div></div>
+        <div class="result-card panel"><div class="result-icon">🛸</div><h3>${t('resultTitle')}</h3><p>${escapeHTML(team.name)} · ${outcome.option.label[lang]}</p>
+          <div class="result-deltas"><div class="delta"><span>${t('resultSpent')}</span><strong>−${money(outcome.option.cost)}</strong></div><div class="delta"><span>${t('resultPoints')}</span><strong>${signed(outcome.option.points)} pts</strong></div></div>
+          <p>${t('remaining')}: <b>${money(team.budget)}</b> · ${t('totalPoints')}: <b>${signed(team.points)}</b></p>
+          <p class="turn-note">${subline}</p>
+          <button id="continue-button" class="primary start-action" type="button">${nextLabel}</button>
+        </div>`;
+      $('continue-button').addEventListener('click',advanceTurn);
+      return;
+    }
+
+    $('play-panel').innerHTML = `
+      <div class="mission-heading"><div class="mission-emblem">${item.mission.icon}</div><div><div class="overline">${t('mission')} ${item.missionIndex+1} / 3 · ${t('challenge')} ${missionRound}/3</div><h3>${missionTitle}</h3><p><b>${t('objective')}:</b> ${objective}</p></div></div>
+      <div class="active-player"><div><small>${t('activeTeam')}</small><strong>${escapeHTML(team.name)}</strong></div><span class="player-tag">${t('round')} ${challengeIndex+1}/${allChallenges.length}</span></div>
+      <div class="challenge-number">${t('challenge')} ${missionRound} / 3</div>
+      <h3 class="question">${item.prompt[lang]}</h3>
+      <p class="instruction">${t('choose')}</p>
+      <div class="options-grid">${item.options.map((option,i)=>{
+        const unknown = option.cost===null;
+        const unaffordable = !unknown && option.cost>team.budget;
+        const disabled = unknown || unaffordable;
+        const label = unknown ? t('noCost') : (unaffordable ? t('tooExpensive') : '');
+        return `<button class="option-card" type="button" data-option="${i}" ${disabled?'disabled':''} aria-label="${t('option')} ${option.letter}: ${escapeHTML(option.label[lang])}">
+          <div class="option-top"><span class="option-letter">${option.letter}</span><span class="option-tag">${t('option')} ${option.letter}</span></div>
+          <div class="option-label">${option.label[lang]}</div>
+          <div class="option-meta"><div class="meta-line"><span>${t('cost')}</span><strong class="cost">${money(option.cost)}</strong></div><div class="meta-line"><span>${t('points')}</span><strong class="points">${signed(option.points)} pts</strong></div></div>
+          ${label?`<div class="missing-note">${label}</div>`:''}
+        </button>`;
+      }).join('')}</div>
+      ${item.mission.id==='europa' && item.challengeIndex===1 ? `<div class="source-note">${t('sourceCaveat')}</div>`:''}`;
+    $('play-panel').querySelectorAll('[data-option]').forEach(button=>button.addEventListener('click',()=>selectOption(Number(button.dataset.option))));
+  }
+  function selectOption(index){
+    const item=allChallenges[challengeIndex];
+    const option=item.options[index];
+    const team=teams[teamIndex];
+    if(option.cost===null) return;
+    if(option.cost>team.budget){
+      $('modal-title').textContent=t('tooExpensive');
+      $('modal-copy').textContent=t('tooExpensiveBody');
+      $('confirm-choice').classList.add('hidden');
+      $('cancel-choice').textContent=lang==='es'?'ENTENDIDO':'GOT IT';
+      $('choice-modal').classList.remove('hidden');
+      return;
+    }
+    selectedOptionIndex=index;
+    $('modal-title').textContent=`${t('option')} ${option.letter} · ${item.mission.title}`;
+    $('modal-copy').textContent=`${option.label[lang]} ${lang==='es'?'Costará':'It will cost'} ${money(option.cost)} ${lang==='es'?'y sumará':'and award'} ${signed(option.points)} ${lang==='es'?'puntos.':'points.'} ${lang==='es'?'Saldo después de confirmar':'Balance after confirmation'}: ${money(team.budget-option.cost)}.`;
+    $('confirm-choice').classList.remove('hidden');
+    $('cancel-choice').textContent=t('cancel');
+    $('choice-modal').classList.remove('hidden');
+  }
+  function closeModal(){ $('choice-modal').classList.add('hidden'); selectedOptionIndex=null; }
+  function confirmChoice(){
+    if(selectedOptionIndex===null) return;
+    const item=allChallenges[challengeIndex];
+    const option=item.options[selectedOptionIndex];
+    const team=teams[teamIndex];
+    if(option.cost===null || option.cost>team.budget){closeModal();return;}
+    team.budget-=option.cost;team.spent+=option.cost;team.points+=option.points;team.missionPoints[item.mission.id]+=option.points;
+    team.records.push({missionId:item.mission.id,challengeIndex:item.challengeIndex,optionIndex:selectedOptionIndex,letter:option.letter,cost:option.cost,points:option.points});
+    lastOutcome={option};
+    closeModal();renderGame();
+  }
+  function advanceTurn(){
+    lastOutcome=null;
+    if(teamIndex+1<teams.length){teamIndex++;}
+    else {teamIndex=0;challengeIndex++;}
+    if(challengeIndex>=allChallenges.length){showScreen('summary');renderSummary();}
+    else renderGame();
+  }
+  function renderSummary(){
+    if(!teams.length)return;
+    const ranked=[...teams].sort((a,b)=>b.points-a.points || b.budget-a.budget);
+    const tied=ranked.length>1 && ranked[0].points===ranked[1].points && ranked[0].budget===ranked[1].budget;
+    const winner=ranked[0];
+    const cards=ranked.map((team,i)=>`<article class="rank-card panel ${i===0&&!tied?'winner':''}">
+      <div class="rank-num">#${i+1} ${i===0&&!tied?'★':''}</div><h3>${escapeHTML(team.name)}</h3>
+      <div class="rank-points">${signed(team.points)} <small style="font-size:10px">pts</small></div>
+      <div class="stat"><span>${t('spentTotal')}</span><strong>${money(team.spent)}</strong></div>
+      <div class="stat"><span>${t('budgetLeft')}</span><strong>${money(team.budget)}</strong></div>
+      <div class="mission-breakdown"><div class="field-label">${t('missionResults')}</div>
+        ${missions.map(m=>`<div class="stat"><span>${m.title}</span><strong>${signed(team.missionPoints[m.id])} pts</strong></div>`).join('')}
+      </div></article>`).join('');
+    const history=ranked.map(team=>`<div class="history panel"><h3>${escapeHTML(team.name)} — ${t('decisionLog')}</h3>${team.records.map(record=>{const mission=missions.find(m=>m.id===record.missionId);const option=mission.challenges[record.challengeIndex].options[record.optionIndex];return `<div class="history-row"><span>${mission.title} · ${record.letter}</span><span>${escapeHTML(option.label[lang])}</span><span class="history-cost">−${money(record.cost)}</span><strong class="history-points">${signed(record.points)} pts</strong></div>`;}).join('') || `<p class="footnote">${t('noHistory')}</p>`}</div>`).join('');
+    $('summary-content').innerHTML=`
+      <div class="summary-head panel"><div class="cup">🏆</div><div class="eyebrow">${t('allComplete')}</div><h2>${t('finalRanking')}</h2><p>${t('summarySubtitle')}</p>
+        <div class="winner-banner">${t(tied?'tie':'winner')}: ${tied?'':escapeHTML(winner.name)}</div><p style="margin-top:12px">${t('winnerText')}</p>
+      </div>
+      <div class="rankings">${cards}</div>
+      ${history}
+      <div class="summary-actions"><button id="replay-button" class="primary" type="button">${t('playAgain')}</button><button id="new-button" class="secondary" type="button">${t('restart')}</button></div>
+      <p class="footnote">${t('tieBreak')}</p>`;
+    $('replay-button').addEventListener('click',beginGame);
+    $('new-button').addEventListener('click',()=>{teams=[];showScreen('start');});
+  }
+
+  $('team-count').addEventListener('change',()=>renderTeamInputs(true));
+  $('start-button').addEventListener('click',beginGame);
+  $('lang-es').addEventListener('click',()=>{lang='es';applyTranslations();});
+  $('lang-en').addEventListener('click',()=>{lang='en';applyTranslations();});
+  $('cancel-choice').addEventListener('click',closeModal);
+  $('confirm-choice').addEventListener('click',confirmChoice);
+  $('choice-modal').addEventListener('click',event=>{if(event.target===$('choice-modal'))closeModal();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('choice-modal').classList.contains('hidden'))closeModal();});
+  renderTeamInputs(false);
+  applyTranslations();
+})();
+</script>
+</body>
+</html>
